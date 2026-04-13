@@ -1,4 +1,4 @@
-"""Power Tariff Window integration."""
+"""HA Dynamic Energy integration."""
 
 from __future__ import annotations
 

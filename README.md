@@ -1,6 +1,6 @@
-# Power Tariff Window (Home Assistant)
+# HA Dynamic Energy
 
-Custom Home Assistant integration to find the cheapest or most expensive `x` hours inside a configurable time window based on an existing price sensor (for example Nord Pool).
+Custom Home Assistant integration to find the cheapest or most expensive `x` hours inside a configurable time window based on an existing price sensor such as Nord Pool.
 
 ## Features
 
@@ -18,10 +18,10 @@ Custom Home Assistant integration to find the cheapest or most expensive `x` hou
 1. Push this repository to GitHub.
 2. In Home Assistant, open HACS.
 3. Add this repo as a custom repository (category: Integration).
-4. Install **Power Tariff Window**.
+4. Install **HA Dynamic Energy**.
 5. Restart Home Assistant.
 6. Go to **Settings > Devices & Services > Add Integration**.
-7. Add **Power Tariff Window** and configure your window.
+7. Add **HA Dynamic Energy** and configure your window.
 
 ## Multiple moments
 

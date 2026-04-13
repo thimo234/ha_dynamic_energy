@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Power Tariefvenster",
+        "title": "HA Dynamic Energy",
         "description": "Stel een tijdvenster in en kies de goedkoopste of duurste uren.",
         "data": {
           "name": "Naam",
@@ -21,7 +21,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Power Tariefvenster opties",
+        "title": "HA Dynamic Energy opties",
         "data": {
           "name": "Naam",
           "price_sensor": "Prijssensor",

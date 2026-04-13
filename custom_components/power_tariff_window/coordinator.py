@@ -1,4 +1,4 @@
-"""Coordinator for Power Tariff Window."""
+"""Coordinator for HA Dynamic Energy."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"Power Tariff Window ({config_entry.entry_id})",
+            name=f"HA Dynamic Energy ({config_entry.entry_id})",
             update_interval=timedelta(minutes=5),
         )
         self.config_entry = config_entry

@@ -1,4 +1,4 @@
-"""Data models for Power Tariff Window."""
+"""Data models for HA Dynamic Energy."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Config flow for Power Tariff Window."""
+"""Config flow for HA Dynamic Energy."""
 
 from __future__ import annotations
 

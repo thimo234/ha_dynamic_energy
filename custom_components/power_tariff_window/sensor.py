@@ -1,4 +1,4 @@
-"""Sensor platform for Power Tariff Window."""
+"""Sensor platform for HA Dynamic Energy."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Constants for the Power Tariff Window integration."""
+"""Constants for the HA Dynamic Energy integration."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ CONF_WINDOW_END = "window_end"
 MODE_CHEAPEST = "cheapest"
 MODE_EXPENSIVE = "expensive"
 
-DEFAULT_NAME = "Power Tariff Window"
+DEFAULT_NAME = "HA Dynamic Energy"
 DEFAULT_HOURS = 1
 DEFAULT_MODE = MODE_CHEAPEST
 DEFAULT_WINDOW_START = "00:00:00"

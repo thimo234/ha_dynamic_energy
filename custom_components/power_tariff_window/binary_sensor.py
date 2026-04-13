@@ -1,4 +1,4 @@
-"""Binary sensor platform for Power Tariff Window."""
+"""Binary sensor platform for HA Dynamic Energy."""
 
 from __future__ import annotations
 

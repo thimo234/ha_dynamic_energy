@@ -49,6 +49,9 @@
       }
     },
     "sensor": {
+      "selected_window": {
+        "name": "Selected window"
+      },
       "next_switch": {
         "name": "Next switch moment"
       },

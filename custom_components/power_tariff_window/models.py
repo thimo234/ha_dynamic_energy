@@ -21,6 +21,9 @@ class TariffPlan:
 
     active: bool
     next_switch: datetime | None
+    selected_window_start: datetime | None
+    selected_window_end: datetime | None
+    selected_window_total_price: float | None
     next_active_start: datetime | None
     active_until: datetime | None
     minutes_until_active: int

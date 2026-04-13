@@ -31,7 +31,9 @@ Create multiple integration entries if you want multiple schedules (for example 
 
 - `binary_sensor.<name>_active`
   - `on` when current time is inside the selected block
-  - includes `selected_slots` and `selected_window` attributes
+  - includes `selected_window_start`, `selected_window_end`, `selected_window_hours` and `selected_window_total_price`
+- `sensor.<name>_selected_window`
+  - shows one readable block like `06:00 - 11:00`
 - `sensor.<name>_next_switch_moment`
   - next timestamp where active state changes
 

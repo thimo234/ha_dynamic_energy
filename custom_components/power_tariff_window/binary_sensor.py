@@ -44,24 +44,12 @@ class TariffWindowActiveBinarySensor(CoordinatorEntity[TariffWindowCoordinator],
     @property
     def extra_state_attributes(self) -> dict:
         """Expose the selected block for dashboard usage."""
-        slots = [
-            {
-                "start": slot.start.isoformat(),
-                "end": slot.end.isoformat(),
-                "price": slot.price,
+        data = self.coordinator.data
+        if data.selected_window_start and data.selected_window_end:
+            return {
+                "selected_window_start": data.selected_window_start.isoformat(),
+                "selected_window_end": data.selected_window_end.isoformat(),
+                "selected_window_hours": len(data.selected_slots),
+                "selected_window_total_price": round(data.selected_window_total_price or 0, 6),
             }
-            for slot in self.coordinator.data.selected_slots
-        ]
-        if slots:
-            selected_window = {
-                "start": slots[0]["start"],
-                "end": slots[-1]["end"],
-                "hours": len(slots),
-                "total_price": round(sum(slot["price"] for slot in slots), 6),
-            }
-        else:
-            selected_window = None
-        return {
-            "selected_slots": slots,
-            "selected_window": selected_window,
-        }
+        return {"selected_window": None}

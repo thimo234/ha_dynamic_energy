@@ -19,11 +19,47 @@ async def async_setup_entry(
     coordinator: TariffWindowCoordinator = entry.runtime_data
     async_add_entities(
         [
+            TariffWindowSelectedWindowSensor(entry, coordinator),
             TariffWindowNextSwitchSensor(entry, coordinator),
             TariffWindowMinutesUntilActiveSensor(entry, coordinator),
             TariffWindowMinutesRemainingSensor(entry, coordinator),
         ]
     )
+
+
+class TariffWindowSelectedWindowSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):
+    """Show the chosen tariff window as one block."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "selected_window"
+
+    def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_selected_window"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return selected window as a readable time range."""
+        data = self.coordinator.data
+        if data.selected_window_start is None or data.selected_window_end is None:
+            return None
+        return (
+            f"{data.selected_window_start.strftime('%H:%M')} - "
+            f"{data.selected_window_end.strftime('%H:%M')}"
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | int | float | None]:
+        """Expose selected window details."""
+        data = self.coordinator.data
+        return {
+            "start": data.selected_window_start.isoformat() if data.selected_window_start else None,
+            "end": data.selected_window_end.isoformat() if data.selected_window_end else None,
+            "hours": len(data.selected_slots),
+            "total_price": round(data.selected_window_total_price, 6)
+            if data.selected_window_total_price is not None
+            else None,
+        }
 
 
 class TariffWindowNextSwitchSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):

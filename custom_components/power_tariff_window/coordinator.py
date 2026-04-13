@@ -79,9 +79,15 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
         next_switch = _next_switch_moment(now, selected)
         next_active_start = _next_active_start(now, active_ranges)
         active_until = _active_until(now, active_ranges)
+        selected_window_start = selected[0].start if selected else None
+        selected_window_end = selected[-1].end if selected else None
+        selected_window_total_price = sum(slot.price for slot in selected) if selected else None
         return TariffPlan(
             active=active,
             next_switch=next_switch,
+            selected_window_start=selected_window_start,
+            selected_window_end=selected_window_end,
+            selected_window_total_price=selected_window_total_price,
             next_active_start=next_active_start,
             active_until=active_until,
             minutes_until_active=_minutes_until(now, next_active_start),
@@ -108,6 +114,9 @@ def _empty_plan() -> TariffPlan:
     return TariffPlan(
         active=False,
         next_switch=None,
+        selected_window_start=None,
+        selected_window_end=None,
+        selected_window_total_price=None,
         next_active_start=None,
         active_until=None,
         minutes_until_active=0,

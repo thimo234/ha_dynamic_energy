@@ -49,6 +49,9 @@
       }
     },
     "sensor": {
+      "selected_window": {
+        "name": "Geselecteerd venster"
+      },
       "next_switch": {
         "name": "Volgend schakelmoment"
       },

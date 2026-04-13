@@ -15,8 +15,8 @@ type RuntimeData = TariffWindowCoordinator
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up entry."""
     coordinator = TariffWindowCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    await coordinator.async_refresh()
 
     price_sensor = entry.options.get(CONF_PRICE_SENSOR, entry.data.get(CONF_PRICE_SENSOR))
     if price_sensor:

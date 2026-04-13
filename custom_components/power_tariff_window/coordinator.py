@@ -44,6 +44,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
             update_interval=timedelta(minutes=5),
         )
         self.config_entry = config_entry
+        self.data = _empty_plan()
 
     async def _async_update_data(self) -> TariffPlan:
         """Fetch sensor data and compute plan."""

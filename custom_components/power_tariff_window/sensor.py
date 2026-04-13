@@ -52,10 +52,15 @@ class TariffWindowSelectedWindowSensor(CoordinatorEntity[TariffWindowCoordinator
     def extra_state_attributes(self) -> dict[str, str | int | float | None]:
         """Expose selected window details."""
         data = self.coordinator.data
+        duration_hours = None
+        if data.selected_window_start and data.selected_window_end:
+            duration_hours = (
+                data.selected_window_end - data.selected_window_start
+            ).total_seconds() / 3600
         return {
             "start": data.selected_window_start.isoformat() if data.selected_window_start else None,
             "end": data.selected_window_end.isoformat() if data.selected_window_end else None,
-            "hours": len(data.selected_slots),
+            "hours": duration_hours,
             "total_price": round(data.selected_window_total_price, 6)
             if data.selected_window_total_price is not None
             else None,

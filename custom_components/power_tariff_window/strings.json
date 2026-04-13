@@ -10,7 +10,8 @@
           "mode": "Selection mode",
           "hours": "Number of hours",
           "window_start": "Window start",
-          "window_end": "Window end"
+          "window_end": "Window end",
+          "align_to_hour": "Start on whole hour"
         }
       }
     },
@@ -29,7 +30,8 @@
           "mode": "Selection mode",
           "hours": "Number of hours",
           "window_start": "Window start",
-          "window_end": "Window end"
+          "window_end": "Window end",
+          "align_to_hour": "Start on whole hour"
         }
       }
     }

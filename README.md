@@ -9,6 +9,7 @@ Custom Home Assistant integration to find the cheapest or most expensive contigu
 - Choose `cheapest` or `most expensive`
 - Set number of hours (`x`) for one contiguous slot
 - Set a daily search window (`start` and `end`)
+- Choose whether the selected window may start on quarter boundaries or only on the whole hour
 - Binary sensor becomes `on` when the current time falls inside the selected block
 - Timestamp sensor shows the next switch moment
 - Installable through HACS as a custom repository

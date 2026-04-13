@@ -7,15 +7,18 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_ALIGN_TO_HOUR,
     CONF_HOURS,
     CONF_MODE,
     CONF_PRICE_SENSOR,
     CONF_WINDOW_END,
     CONF_WINDOW_START,
+    DEFAULT_ALIGN_TO_HOUR,
     DEFAULT_HOURS,
     DEFAULT_MODE,
     DEFAULT_NAME,
@@ -35,17 +38,14 @@ def _schema_with_defaults(
     """Build config schema with only supported price sensors."""
     return vol.Schema(
         {
-            vol.Required(
-                "name",
-                default=defaults.get("name", DEFAULT_NAME),
-            ): selector.TextSelector(),
+            vol.Required("name", default=defaults.get("name", DEFAULT_NAME)): selector.TextSelector(),
             vol.Required(
                 CONF_PRICE_SENSOR,
                 default=defaults.get(CONF_PRICE_SENSOR, ""),
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=_price_sensor_options(hass, current_price_sensor),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
+            ): selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    domain="sensor",
+                    include_entities=_compatible_price_sensor_ids(hass, current_price_sensor),
                 )
             ),
             vol.Required(
@@ -72,6 +72,10 @@ def _schema_with_defaults(
                 CONF_WINDOW_END,
                 default=defaults.get(CONF_WINDOW_END, DEFAULT_WINDOW_END),
             ): selector.TimeSelector(),
+            vol.Required(
+                CONF_ALIGN_TO_HOUR,
+                default=defaults.get(CONF_ALIGN_TO_HOUR, DEFAULT_ALIGN_TO_HOUR),
+            ): selector.BooleanSelector(),
         }
     )
 
@@ -82,13 +86,13 @@ class TariffWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
+        """Handle the initial config step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
             errors = _validate(self.hass, user_input)
             if not errors:
-                title = user_input["name"]
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(title=user_input["name"], data=user_input)
 
         defaults = user_input or {}
         return self.async_show_form(
@@ -102,24 +106,24 @@ class TariffWindowConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    def async_get_options_flow(config_entry):
-        return TariffWindowOptionsFlow(config_entry)
+    def async_get_options_flow(config_entry: ConfigEntry):
+        """Return the options flow handler."""
+        return TariffWindowOptionsFlowHandler(config_entry)
 
 
-class TariffWindowOptionsFlow(config_entries.OptionsFlow):
-    """Handle options for existing entry."""
-
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
+class TariffWindowOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+    """Handle options for existing entries."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None):
+        """Show and validate editable settings for an existing entry."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
             errors = _validate(self.hass, user_input)
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, title=user_input["name"]
+                    self.config_entry,
+                    title=user_input["name"],
                 )
                 return self.async_create_entry(title="", data=user_input)
 
@@ -158,49 +162,26 @@ def _validate(hass: HomeAssistant, user_input: dict[str, Any]) -> dict[str, str]
     return errors
 
 
-def _price_sensor_options(
+def _compatible_price_sensor_ids(
     hass: HomeAssistant,
     current_price_sensor: str | None = None,
-) -> list[selector.SelectOptionDict]:
-    """Return only compatible hourly price sensors for selection."""
-    options: list[selector.SelectOptionDict] = []
+) -> list[str]:
+    """Return compatible price sensor entity ids."""
+    entity_ids = [
+        state.entity_id
+        for state in sorted(hass.states.async_all("sensor"), key=lambda item: item.name.lower())
+        if _is_compatible_price_sensor(state.attributes)
+    ]
 
-    for state in sorted(hass.states.async_all("sensor"), key=lambda item: item.name.lower()):
-        if not _is_compatible_price_sensor(state.attributes):
-            continue
-        options.append(
-            selector.SelectOptionDict(
-                value=state.entity_id,
-                label=f"{state.name} ({state.entity_id})",
-            )
-        )
+    if current_price_sensor and current_price_sensor not in entity_ids:
+        entity_ids.insert(0, current_price_sensor)
 
-    if current_price_sensor and current_price_sensor not in {
-        option["value"] for option in options
-    }:
-        current_state = hass.states.get(current_price_sensor)
-        current_label = current_price_sensor
-        if current_state is not None:
-            current_label = f"{current_state.name} ({current_price_sensor})"
-        options.insert(
-            0,
-            selector.SelectOptionDict(
-                value=current_price_sensor,
-                label=f"{current_label} [currently selected]",
-            ),
-        )
-
-    return options
+    return entity_ids
 
 
 def _is_compatible_price_sensor(attributes: dict[str, Any]) -> bool:
-    """Check if a sensor exposes hourly pricing data we can consume."""
-    if isinstance(attributes.get("raw_today"), list):
-        return True
-    if isinstance(attributes.get("raw_tomorrow"), list):
-        return True
-    if isinstance(attributes.get("today"), list):
-        return True
-    if isinstance(attributes.get("tomorrow"), list):
-        return True
-    return False
+    """Check if a sensor exposes price data we can consume."""
+    return any(
+        isinstance(attributes.get(key), list)
+        for key in ("raw_today", "raw_tomorrow", "today", "tomorrow")
+    )

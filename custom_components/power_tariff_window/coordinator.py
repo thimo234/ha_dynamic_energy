@@ -11,11 +11,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_ALIGN_TO_HOUR,
     CONF_HOURS,
     CONF_MODE,
     CONF_PRICE_SENSOR,
     CONF_WINDOW_END,
     CONF_WINDOW_START,
+    DEFAULT_ALIGN_TO_HOUR,
     DEFAULT_HOURS,
     DEFAULT_MODE,
     DEFAULT_WINDOW_END,
@@ -49,6 +51,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
         hours = int(self._get_value(CONF_HOURS, DEFAULT_HOURS))
         window_start = _parse_time(self._get_value(CONF_WINDOW_START, DEFAULT_WINDOW_START))
         window_end = _parse_time(self._get_value(CONF_WINDOW_END, DEFAULT_WINDOW_END))
+        align_to_hour = bool(self._get_value(CONF_ALIGN_TO_HOUR, DEFAULT_ALIGN_TO_HOUR))
 
         state = self.hass.states.get(price_entity)
         if state is None:
@@ -72,6 +75,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
             hours=hours,
             window_start=window_start,
             window_end=window_end,
+            align_to_hour=align_to_hour,
         )
 
         active_ranges = _merge_selected_slots(selected)
@@ -81,7 +85,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
         active_until = _active_until(now, active_ranges)
         selected_window_start = selected[0].start if selected else None
         selected_window_end = selected[-1].end if selected else None
-        selected_window_total_price = sum(slot.price for slot in selected) if selected else None
+        selected_window_total_price = _window_total_price(selected) if selected else None
         return TariffPlan(
             active=active,
             next_switch=next_switch,
@@ -250,87 +254,118 @@ def _select_slots(
     hours: int,
     window_start: time,
     window_end: time,
+    align_to_hour: bool,
 ) -> list[PriceSlot]:
     """Select the best contiguous block for today and tomorrow windows."""
-    by_start = {slot.start: slot for slot in slots}
     selected: list[PriceSlot] = []
 
     for day in (now.date(), now.date() + timedelta(days=1)):
-        in_window = _slots_in_window(by_start, day, window_start, window_end)
-        if not in_window:
-            continue
-
-        selected.extend(_best_contiguous_block(in_window, hours, mode))
+        selected.extend(
+            _best_contiguous_block_for_window(
+                slots=slots,
+                day=day,
+                window_start=window_start,
+                window_end=window_end,
+                hours=hours,
+                mode=mode,
+                align_to_hour=align_to_hour,
+            )
+        )
 
     selected.sort(key=lambda item: item.start)
     return selected
 
 
-def _slots_in_window(
-    by_start: dict[datetime, PriceSlot],
+def _best_contiguous_block_for_window(
+    slots: list[PriceSlot],
     day: date,
     window_start: time,
     window_end: time,
+    hours: int,
+    mode: str,
+    align_to_hour: bool,
 ) -> list[PriceSlot]:
-    """Get all full-hour slots whose start is in the configured window."""
-    first_slot = next(iter(by_start.values()))
+    """Return the best contiguous block inside one configured window."""
+    if not slots:
+        return []
+
+    first_slot = slots[0]
     start_dt = datetime.combine(day, window_start, tzinfo=first_slot.start.tzinfo)
     if window_end <= window_start:
         end_dt = datetime.combine(day + timedelta(days=1), window_end, tzinfo=start_dt.tzinfo)
     else:
         end_dt = datetime.combine(day, window_end, tzinfo=start_dt.tzinfo)
 
-    items: list[PriceSlot] = []
-    cursor = start_dt
-    while cursor < end_dt:
-        slot = by_start.get(cursor)
-        if slot is not None:
-            items.append(slot)
-        cursor += timedelta(hours=1)
-    return items
+    slot_map = {slot.start: slot for slot in slots}
+    required_duration = timedelta(hours=hours)
+    latest_start = end_dt - required_duration
 
-
-def _best_contiguous_block(
-    slots: list[PriceSlot],
-    hours: int,
-    mode: str,
-) -> list[PriceSlot]:
-    """Return the best contiguous block of the requested length."""
-    if hours <= 0 or len(slots) < hours:
+    if hours <= 0 or latest_start < start_dt:
         return []
 
     best_block: list[PriceSlot] = []
     best_score: float | None = None
     prefer_lower = mode == MODE_CHEAPEST
 
-    for start_index in range(len(slots) - hours + 1):
-        block = slots[start_index : start_index + hours]
-        if not _is_contiguous_block(block):
+    for slot in slots:
+        if slot.start < start_dt or slot.start > latest_start:
+            continue
+        if align_to_hour and slot.start.minute != 0:
             continue
 
-        score = sum(slot.price for slot in block)
+        block, weighted_cost = _collect_block(slot_map, slot.start, required_duration)
+        if not block:
+            continue
+
         if best_score is None:
             best_block = block
-            best_score = score
+            best_score = weighted_cost
             continue
 
-        if prefer_lower and score < best_score:
+        if prefer_lower and weighted_cost < best_score:
             best_block = block
-            best_score = score
+            best_score = weighted_cost
             continue
 
-        if not prefer_lower and score > best_score:
+        if not prefer_lower and weighted_cost > best_score:
             best_block = block
-            best_score = score
+            best_score = weighted_cost
 
     return best_block
 
 
-def _is_contiguous_block(slots: list[PriceSlot]) -> bool:
-    """Check whether all slots in a block are adjacent."""
-    return all(
-        current.end == nxt.start
-        for current, nxt in zip(slots, slots[1:], strict=False)
+def _collect_block(
+    slot_map: dict[datetime, PriceSlot],
+    start: datetime,
+    required_duration: timedelta,
+) -> tuple[list[PriceSlot], float]:
+    """Collect a contiguous block starting at one specific time."""
+    block: list[PriceSlot] = []
+    weighted_cost = 0.0
+    covered = timedelta(0)
+    cursor = start
+
+    while covered < required_duration:
+        slot = slot_map.get(cursor)
+        if slot is None:
+            return [], 0.0
+        duration = slot.end - slot.start
+        block.append(slot)
+        covered += duration
+        weighted_cost += slot.price * duration.total_seconds()
+        cursor = slot.end
+
+    if covered != required_duration:
+        return [], 0.0
+
+    return block, weighted_cost
+
+
+def _window_total_price(slots: list[PriceSlot]) -> float:
+    """Return total price over the selected window for a constant 1 kW load."""
+    return sum(
+        slot.price * ((slot.end - slot.start).total_seconds() / 3600)
+        for slot in slots
     )
 
 

@@ -46,10 +46,13 @@ class TariffWindowActiveBinarySensor(CoordinatorEntity[TariffWindowCoordinator],
         """Expose the selected block for dashboard usage."""
         data = self.coordinator.data
         if data.selected_window_start and data.selected_window_end:
+            duration_hours = (
+                data.selected_window_end - data.selected_window_start
+            ).total_seconds() / 3600
             return {
                 "selected_window_start": data.selected_window_start.isoformat(),
                 "selected_window_end": data.selected_window_end.isoformat(),
-                "selected_window_hours": len(data.selected_slots),
+                "selected_window_hours": duration_hours,
                 "selected_window_total_price": round(data.selected_window_total_price or 0, 6),
             }
         return {"selected_window": None}

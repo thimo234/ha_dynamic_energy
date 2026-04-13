@@ -10,7 +10,8 @@
           "mode": "Selectiemodus",
           "hours": "Aantal uren",
           "window_start": "Start venster",
-          "window_end": "Einde venster"
+          "window_end": "Einde venster",
+          "align_to_hour": "Start op heel uur"
         }
       }
     },
@@ -29,7 +30,8 @@
           "mode": "Selectiemodus",
           "hours": "Aantal uren",
           "window_start": "Start venster",
-          "window_end": "Einde venster"
+          "window_end": "Einde venster",
+          "align_to_hour": "Start op heel uur"
         }
       }
     }

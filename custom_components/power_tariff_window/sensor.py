@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import TariffWindowCoordinator
 
 
@@ -32,12 +33,16 @@ async def async_setup_entry(
 class TariffWindowSelectedWindowSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):
     """Show the chosen tariff window as one block."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "selected_window"
-
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_selected_window"
+        self._attr_name = f"{entry.title} Selected Window"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.title,
+            "manufacturer": "Custom",
+            "model": "Tariff Window Planner",
+        }
 
     @property
     def native_value(self) -> str | None:
@@ -74,13 +79,18 @@ class TariffWindowSelectedWindowStartSensor(
 ):
     """Show the start timestamp of the selected window."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "selected_window_start"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_selected_window_start"
+        self._attr_name = f"{entry.title} Selected Window Start"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.title,
+            "manufacturer": "Custom",
+            "model": "Tariff Window Planner",
+        }
 
     @property
     def native_value(self):
@@ -93,13 +103,18 @@ class TariffWindowSelectedWindowEndSensor(
 ):
     """Show the end timestamp of the selected window."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "selected_window_end"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_selected_window_end"
+        self._attr_name = f"{entry.title} Selected Window End"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.title,
+            "manufacturer": "Custom",
+            "model": "Tariff Window Planner",
+        }
 
     @property
     def native_value(self):
@@ -110,13 +125,18 @@ class TariffWindowSelectedWindowEndSensor(
 class TariffWindowNextSwitchSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):
     """Show next moment when active state changes."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "next_switch"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_next_switch"
+        self._attr_name = f"{entry.title} Next Switch Moment"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.title,
+            "manufacturer": "Custom",
+            "model": "Tariff Window Planner",
+        }
 
     @property
     def native_value(self):
@@ -127,8 +147,6 @@ class TariffWindowNextSwitchSensor(CoordinatorEntity[TariffWindowCoordinator], S
 class TariffWindowMinutesUntilActiveSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):
     """Show how many minutes remain until the next active window starts."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "minutes_until_active"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_suggested_display_precision = 0
@@ -136,6 +154,13 @@ class TariffWindowMinutesUntilActiveSensor(CoordinatorEntity[TariffWindowCoordin
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_minutes_until_active"
+        self._attr_name = f"{entry.title} Minutes Until Active"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.title,
+            "manufacturer": "Custom",
+            "model": "Tariff Window Planner",
+        }
 
     @property
     def native_value(self) -> int:
@@ -146,8 +171,6 @@ class TariffWindowMinutesUntilActiveSensor(CoordinatorEntity[TariffWindowCoordin
 class TariffWindowMinutesRemainingSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):
     """Show how many minutes remain in the current active window."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "minutes_remaining_active"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_suggested_display_precision = 0
@@ -155,6 +178,13 @@ class TariffWindowMinutesRemainingSensor(CoordinatorEntity[TariffWindowCoordinat
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_minutes_remaining_active"
+        self._attr_name = f"{entry.title} Minutes Remaining Active"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.title,
+            "manufacturer": "Custom",
+            "model": "Tariff Window Planner",
+        }
 
     @property
     def native_value(self) -> int:

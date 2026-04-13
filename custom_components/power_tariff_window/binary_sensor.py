@@ -23,12 +23,10 @@ async def async_setup_entry(
 class TariffWindowActiveBinarySensor(CoordinatorEntity[TariffWindowCoordinator], BinarySensorEntity):
     """True while current hour is one of selected cheapest/expensive slots."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "active"
-
     def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_active"
+        self._attr_name = f"{entry.title} Active"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": entry.title,

@@ -1,0 +1,23 @@
+"""Constants for the Power Tariff Window integration."""
+
+from __future__ import annotations
+
+from homeassistant.const import Platform
+
+DOMAIN = "power_tariff_window"
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+CONF_PRICE_SENSOR = "price_sensor"
+CONF_MODE = "mode"
+CONF_HOURS = "hours"
+CONF_WINDOW_START = "window_start"
+CONF_WINDOW_END = "window_end"
+
+MODE_CHEAPEST = "cheapest"
+MODE_EXPENSIVE = "expensive"
+
+DEFAULT_NAME = "Power Tariff Window"
+DEFAULT_HOURS = 1
+DEFAULT_MODE = MODE_CHEAPEST
+DEFAULT_WINDOW_START = "00:00:00"
+DEFAULT_WINDOW_END = "23:59:00"

@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Power Tariff Window",
+        "description": "Configure a time window and select the cheapest or most expensive hours.",
+        "data": {
+          "name": "Name",
+          "price_sensor": "Price sensor",
+          "mode": "Selection mode",
+          "hours": "Number of hours",
+          "window_start": "Window start",
+          "window_end": "Window end"
+        }
+      }
+    },
+    "error": {
+      "invalid_hours": "Hours must be a number between 1 and 24."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Power Tariff Window options",
+        "data": {
+          "name": "Name",
+          "price_sensor": "Price sensor",
+          "mode": "Selection mode",
+          "hours": "Number of hours",
+          "window_start": "Window start",
+          "window_end": "Window end"
+        }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "cheapest": "Cheapest",
+        "expensive": "Most expensive"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active": {
+        "name": "Active"
+      }
+    },
+    "sensor": {
+      "next_switch": {
+        "name": "Next switch moment"
+      }
+    }
+  }
+}

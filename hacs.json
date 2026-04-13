@@ -1,0 +1,7 @@
+{
+  "name": "Power Tariff Window",
+  "content_in_root": false,
+  "domains": ["power_tariff_window"],
+  "homeassistant": "2024.10.0",
+  "render_readme": true
+}

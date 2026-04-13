@@ -1,0 +1,11 @@
+{
+  "domain": "power_tariff_window",
+  "name": "Power Tariff Window",
+  "codeowners": ["@wolthi"],
+  "config_flow": true,
+  "documentation": "https://github.com/wolthi/ha-power-tariff-window",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "requirements": [],
+  "version": "0.1.0"
+}

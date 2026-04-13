@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Power Tariefvenster",
+        "description": "Stel een tijdvenster in en kies de goedkoopste of duurste uren.",
+        "data": {
+          "name": "Naam",
+          "price_sensor": "Prijssensor",
+          "mode": "Selectiemodus",
+          "hours": "Aantal uren",
+          "window_start": "Start venster",
+          "window_end": "Einde venster"
+        }
+      }
+    },
+    "error": {
+      "invalid_hours": "Uren moet een getal tussen 1 en 24 zijn."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Power Tariefvenster opties",
+        "data": {
+          "name": "Naam",
+          "price_sensor": "Prijssensor",
+          "mode": "Selectiemodus",
+          "hours": "Aantal uren",
+          "window_start": "Start venster",
+          "window_end": "Einde venster"
+        }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "cheapest": "Goedkoopste",
+        "expensive": "Duurste"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active": {
+        "name": "Actief"
+      }
+    },
+    "sensor": {
+      "next_switch": {
+        "name": "Volgend schakelmoment"
+      }
+    }
+  }
+}

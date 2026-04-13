@@ -54,6 +54,12 @@
       "selected_window": {
         "name": "Selected window"
       },
+      "selected_window_start": {
+        "name": "Selected window start"
+      },
+      "selected_window_end": {
+        "name": "Selected window end"
+      },
       "next_switch": {
         "name": "Next switch moment"
       },

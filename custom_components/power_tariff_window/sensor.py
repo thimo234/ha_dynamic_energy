@@ -20,6 +20,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             TariffWindowSelectedWindowSensor(entry, coordinator),
+            TariffWindowSelectedWindowStartSensor(entry, coordinator),
+            TariffWindowSelectedWindowEndSensor(entry, coordinator),
             TariffWindowNextSwitchSensor(entry, coordinator),
             TariffWindowMinutesUntilActiveSensor(entry, coordinator),
             TariffWindowMinutesRemainingSensor(entry, coordinator),
@@ -65,6 +67,44 @@ class TariffWindowSelectedWindowSensor(CoordinatorEntity[TariffWindowCoordinator
             if data.selected_window_total_price is not None
             else None,
         }
+
+
+class TariffWindowSelectedWindowStartSensor(
+    CoordinatorEntity[TariffWindowCoordinator], SensorEntity
+):
+    """Show the start timestamp of the selected window."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "selected_window_start"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_selected_window_start"
+
+    @property
+    def native_value(self):
+        """Return selected window start."""
+        return self.coordinator.data.selected_window_start
+
+
+class TariffWindowSelectedWindowEndSensor(
+    CoordinatorEntity[TariffWindowCoordinator], SensorEntity
+):
+    """Show the end timestamp of the selected window."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "selected_window_end"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, entry: ConfigEntry, coordinator: TariffWindowCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_selected_window_end"
+
+    @property
+    def native_value(self):
+        """Return selected window end."""
+        return self.coordinator.data.selected_window_end
 
 
 class TariffWindowNextSwitchSensor(CoordinatorEntity[TariffWindowCoordinator], SensorEntity):

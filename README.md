@@ -35,6 +35,10 @@ Create multiple integration entries if you want multiple schedules (for example 
   - includes `selected_window_start`, `selected_window_end`, `selected_window_hours` and `selected_window_total_price`
 - `sensor.<name>_selected_window`
   - shows one readable block like `06:00 - 11:00`
+- `sensor.<name>_selected_window_start`
+  - start timestamp of the selected block
+- `sensor.<name>_selected_window_end`
+  - end timestamp of the selected block
 - `sensor.<name>_next_switch_moment`
   - next timestamp where active state changes
 

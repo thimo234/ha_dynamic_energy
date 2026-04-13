@@ -6,7 +6,8 @@ from datetime import date, datetime, time, timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -104,6 +105,14 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
         if key in self.config_entry.options:
             return self.config_entry.options[key]
         return self.config_entry.data.get(key, default)
+
+    async def async_handle_price_state_change(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Refresh as soon as the source price sensor becomes available or changes."""
+        if event.data.get("new_state") is None:
+            return
+        await self.async_request_refresh()
 
 
 def _parse_time(value: str | time) -> time:

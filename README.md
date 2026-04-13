@@ -42,4 +42,5 @@ Create multiple integration entries if you want multiple schedules (for example 
 - The integration reads hourly prices from sensor attributes:
   - preferred: `raw_today` / `raw_tomorrow`
   - fallback: `today` / `tomorrow`
+- Quarter-hour and half-hour source data is automatically aggregated to hourly blocks
 - If your source does not expose these attributes, no selection can be made.

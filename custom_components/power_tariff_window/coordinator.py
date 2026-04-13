@@ -127,7 +127,7 @@ def _empty_plan() -> TariffPlan:
 
 def _extract_slots(attributes: dict, tz) -> list[PriceSlot]:
     """Extract hourly slots from Nord Pool style attributes."""
-    slots: list[PriceSlot] = []
+    raw_slots: list[PriceSlot] = []
 
     for key in ("raw_today", "raw_tomorrow"):
         raw = attributes.get(key)
@@ -141,35 +141,37 @@ def _extract_slots(attributes: dict, tz) -> list[PriceSlot]:
                 if start is None or end is None or value is None:
                     continue
                 try:
-                    slots.append(PriceSlot(start=start, end=end, price=float(value)))
+                    raw_slots.append(PriceSlot(start=start, end=end, price=float(value)))
                 except (TypeError, ValueError):
                     continue
 
-    if slots:
-        return sorted(slots, key=lambda item: item.start)
+    if raw_slots:
+        return _normalize_to_hourly_slots(sorted(raw_slots, key=lambda item: item.start))
 
     # Fallback: some sensors expose "today"/"tomorrow" as 24-value lists.
     today_values = attributes.get("today")
     tomorrow_values = attributes.get("tomorrow")
     now_local = dt_util.now().astimezone(tz)
     midnight_today = datetime.combine(now_local.date(), time(0, 0, 0), tzinfo=tz)
+    slots: list[PriceSlot] = []
 
     def add_simple_day(values: list, day_offset: int) -> None:
         if not isinstance(values, list):
             return
         day_start = midnight_today + timedelta(days=day_offset)
+        slot_duration = _infer_slot_duration(len(values))
         for idx, value in enumerate(values):
             try:
                 price = float(value)
             except (TypeError, ValueError):
                 continue
-            start = day_start + timedelta(hours=idx)
-            end = start + timedelta(hours=1)
+            start = day_start + (slot_duration * idx)
+            end = start + slot_duration
             slots.append(PriceSlot(start=start, end=end, price=price))
 
     add_simple_day(today_values, 0)
     add_simple_day(tomorrow_values, 1)
-    return sorted(slots, key=lambda item: item.start)
+    return _normalize_to_hourly_slots(sorted(slots, key=lambda item: item.start))
 
 
 def _parse_dt(raw_value, tz) -> datetime | None:
@@ -189,6 +191,56 @@ def _parse_dt(raw_value, tz) -> datetime | None:
     if dt_value.tzinfo is None:
         return dt_value.replace(tzinfo=tz)
     return dt_value.astimezone(tz)
+
+
+def _infer_slot_duration(value_count: int) -> timedelta:
+    """Infer price slot duration from the number of values in one day."""
+    if value_count <= 0:
+        return timedelta(hours=1)
+    return timedelta(days=1) / value_count
+
+
+def _normalize_to_hourly_slots(slots: list[PriceSlot]) -> list[PriceSlot]:
+    """Aggregate quarter-hour or half-hour prices into hourly slots."""
+    if not slots:
+        return []
+
+    first_duration = slots[0].end - slots[0].start
+    if first_duration == timedelta(hours=1):
+        return slots
+
+    hourly_slots: list[PriceSlot] = []
+    slot_map = {slot.start: slot for slot in slots}
+    current = slots[0].start.replace(minute=0, second=0, microsecond=0)
+    final_end = max(slot.end for slot in slots)
+
+    while current < final_end:
+        hour_end = current + timedelta(hours=1)
+        cursor = current
+        weighted_total = 0.0
+        covered = timedelta(0)
+
+        while cursor < hour_end:
+            slot = slot_map.get(cursor)
+            if slot is None:
+                break
+            duration = slot.end - slot.start
+            weighted_total += slot.price * duration.total_seconds()
+            covered += duration
+            cursor = slot.end
+
+        if covered == timedelta(hours=1):
+            hourly_slots.append(
+                PriceSlot(
+                    start=current,
+                    end=hour_end,
+                    price=weighted_total / covered.total_seconds(),
+                )
+            )
+
+        current = hour_end
+
+    return hourly_slots
 
 
 def _select_slots(

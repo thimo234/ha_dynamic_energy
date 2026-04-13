@@ -53,7 +53,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
         state = self.hass.states.get(price_entity)
         if state is None:
             _LOGGER.warning("Price sensor '%s' not found", price_entity)
-            return TariffPlan(active=False, next_switch=None, selected_slots=[])
+            return _empty_plan()
 
         tz = dt_util.get_time_zone(self.hass.config.time_zone) or dt_util.UTC
         slots = _extract_slots(state.attributes, tz)
@@ -62,7 +62,7 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
                 "No usable price slots found in '%s' attributes (expected raw_today/raw_tomorrow or today/tomorrow)",
                 price_entity,
             )
-            return TariffPlan(active=False, next_switch=None, selected_slots=[])
+            return _empty_plan()
 
         now = dt_util.now().astimezone(tz)
         selected = _select_slots(
@@ -74,9 +74,20 @@ class TariffWindowCoordinator(DataUpdateCoordinator[TariffPlan]):
             window_end=window_end,
         )
 
+        active_ranges = _merge_selected_slots(selected)
         active = _is_active(now, selected)
         next_switch = _next_switch_moment(now, selected)
-        return TariffPlan(active=active, next_switch=next_switch, selected_slots=selected)
+        next_active_start = _next_active_start(now, active_ranges)
+        active_until = _active_until(now, active_ranges)
+        return TariffPlan(
+            active=active,
+            next_switch=next_switch,
+            next_active_start=next_active_start,
+            active_until=active_until,
+            minutes_until_active=_minutes_until(now, next_active_start),
+            minutes_remaining_active=_minutes_until(now, active_until),
+            selected_slots=selected,
+        )
 
     def _get_value(self, key: str, default: str | int | None = None) -> str | int | None:
         """Return option value with data fallback."""
@@ -90,6 +101,19 @@ def _parse_time(value: str | time) -> time:
     if isinstance(value, time):
         return value
     return time.fromisoformat(value)
+
+
+def _empty_plan() -> TariffPlan:
+    """Return an empty plan when no data is available."""
+    return TariffPlan(
+        active=False,
+        next_switch=None,
+        next_active_start=None,
+        active_until=None,
+        minutes_until_active=0,
+        minutes_remaining_active=0,
+        selected_slots=[],
+    )
 
 
 def _extract_slots(attributes: dict, tz) -> list[PriceSlot]:
@@ -227,3 +251,49 @@ def _next_switch_moment(now: datetime, slots: list[PriceSlot]) -> datetime | Non
         if before != after:
             return boundary
     return None
+
+
+def _merge_selected_slots(slots: list[PriceSlot]) -> list[tuple[datetime, datetime]]:
+    """Merge adjacent selected hourly slots into active ranges."""
+    if not slots:
+        return []
+
+    ranges: list[tuple[datetime, datetime]] = []
+    current_start = slots[0].start
+    current_end = slots[0].end
+
+    for slot in slots[1:]:
+        if slot.start == current_end:
+            current_end = slot.end
+            continue
+        ranges.append((current_start, current_end))
+        current_start = slot.start
+        current_end = slot.end
+
+    ranges.append((current_start, current_end))
+    return ranges
+
+
+def _next_active_start(now: datetime, active_ranges: list[tuple[datetime, datetime]]) -> datetime | None:
+    """Return the next future active range start."""
+    for start, end in active_ranges:
+        if start <= now < end:
+            return start
+        if start > now:
+            return start
+    return None
+
+
+def _active_until(now: datetime, active_ranges: list[tuple[datetime, datetime]]) -> datetime | None:
+    """Return the end of the currently active range."""
+    for start, end in active_ranges:
+        if start <= now < end:
+            return end
+    return None
+
+
+def _minutes_until(now: datetime, moment: datetime | None) -> int:
+    """Return whole minutes until a moment, clamped at zero."""
+    if moment is None or moment <= now:
+        return 0
+    return int((moment - now).total_seconds() // 60)

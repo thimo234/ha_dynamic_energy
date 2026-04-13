@@ -21,4 +21,8 @@ class TariffPlan:
 
     active: bool
     next_switch: datetime | None
+    next_active_start: datetime | None
+    active_until: datetime | None
+    minutes_until_active: int
+    minutes_remaining_active: int
     selected_slots: list[PriceSlot]

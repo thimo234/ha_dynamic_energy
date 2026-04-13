@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "invalid_hours": "Hours must be a number between 1 and 24."
+      "invalid_hours": "Hours must be a number between 1 and 24.",
+      "invalid_price_sensor": "Select a compatible Nord Pool or hourly price sensor."
     }
   },
   "options": {
@@ -50,6 +51,12 @@
     "sensor": {
       "next_switch": {
         "name": "Next switch moment"
+      },
+      "minutes_until_active": {
+        "name": "Minutes until active"
+      },
+      "minutes_remaining_active": {
+        "name": "Minutes remaining active"
       }
     }
   }

@@ -4,7 +4,7 @@
   "codeowners": ["@thimo234"],
   "config_flow": true,
   "documentation": "https://github.com/thimo234/ha_dynamic_energy",
-  "integration_type": "helper",
+  "integration_type": "service",
   "iot_class": "calculated",
   "requirements": [],
   "version": "0.1.0"

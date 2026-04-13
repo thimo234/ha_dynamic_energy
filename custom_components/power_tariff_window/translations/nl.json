@@ -15,7 +15,8 @@
       }
     },
     "error": {
-      "invalid_hours": "Uren moet een getal tussen 1 en 24 zijn."
+      "invalid_hours": "Uren moet een getal tussen 1 en 24 zijn.",
+      "invalid_price_sensor": "Kies een compatibele Nord Pool of uurtarief sensor."
     }
   },
   "options": {
@@ -50,6 +51,12 @@
     "sensor": {
       "next_switch": {
         "name": "Volgend schakelmoment"
+      },
+      "minutes_until_active": {
+        "name": "Minuten tot actief"
+      },
+      "minutes_remaining_active": {
+        "name": "Minuten resterend actief"
       }
     }
   }

@@ -190,7 +190,7 @@ def _select_slots(
     window_start: time,
     window_end: time,
 ) -> list[PriceSlot]:
-    """Select cheapest/most expensive slots for today and tomorrow windows."""
+    """Select the best contiguous block for today and tomorrow windows."""
     by_start = {slot.start: slot for slot in slots}
     selected: list[PriceSlot] = []
 
@@ -199,9 +199,7 @@ def _select_slots(
         if not in_window:
             continue
 
-        reverse = mode != MODE_CHEAPEST
-        ranked = sorted(in_window, key=lambda item: (item.price, item.start), reverse=reverse)
-        selected.extend(sorted(ranked[:hours], key=lambda item: item.start))
+        selected.extend(_best_contiguous_block(in_window, hours, mode))
 
     selected.sort(key=lambda item: item.start)
     return selected
@@ -229,6 +227,50 @@ def _slots_in_window(
             items.append(slot)
         cursor += timedelta(hours=1)
     return items
+
+
+def _best_contiguous_block(
+    slots: list[PriceSlot],
+    hours: int,
+    mode: str,
+) -> list[PriceSlot]:
+    """Return the best contiguous block of the requested length."""
+    if hours <= 0 or len(slots) < hours:
+        return []
+
+    best_block: list[PriceSlot] = []
+    best_score: float | None = None
+    prefer_lower = mode == MODE_CHEAPEST
+
+    for start_index in range(len(slots) - hours + 1):
+        block = slots[start_index : start_index + hours]
+        if not _is_contiguous_block(block):
+            continue
+
+        score = sum(slot.price for slot in block)
+        if best_score is None:
+            best_block = block
+            best_score = score
+            continue
+
+        if prefer_lower and score < best_score:
+            best_block = block
+            best_score = score
+            continue
+
+        if not prefer_lower and score > best_score:
+            best_block = block
+            best_score = score
+
+    return best_block
+
+
+def _is_contiguous_block(slots: list[PriceSlot]) -> bool:
+    """Check whether all slots in a block are adjacent."""
+    return all(
+        current.end == nxt.start
+        for current, nxt in zip(slots, slots[1:], strict=False)
+    )
 
 
 def _is_active(now: datetime, slots: list[PriceSlot]) -> bool:
